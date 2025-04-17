@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProductRequest;
 use App\Models\Product;
+use App\Models\ProductGallery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -18,7 +19,7 @@ class ProductController extends Controller
     {
         $this->middleware('auth');
     }
-    
+
     /**
      * Display a listing of the resource.
      */
@@ -26,8 +27,8 @@ class ProductController extends Controller
     {
         $items = Product::all();
 
-        $title = 'Delete Data?';
-        $text = "Are you sure you want to delete?";
+        $title = 'Hapus Produk?';
+        $text = "Anda yakin ingin menghapus produk?";
         confirmDelete($title, $text);
 
         return view('pages.products.index')->with([
@@ -96,8 +97,21 @@ class ProductController extends Controller
     {
         $item = Product::findOrFail($id);
         $item->delete();
-        alert()->success('Deleted','Post Deleted Successfully');
+        ProductGallery::where('products_id', $id)->delete();
+        
+        alert()->success('Terhapus', 'Produk berhasil dihapus');
 
         return redirect()->route('products.index');
+    }
+
+    public function gallery(Request $request, $id)
+    {
+        $products = Product::findOrFail($id);
+        $items = ProductGallery::with('product')->where('products_id', $id)->get();
+
+        return view('pages.products.gallery')->with([
+            'product'  => $products,
+            'items'    => $items
+        ]);
     }
 }
