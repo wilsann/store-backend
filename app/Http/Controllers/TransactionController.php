@@ -24,6 +24,10 @@ class TransactionController extends Controller
     {
         $items = Transaction::all();
 
+        $title = 'Hapus Transaksi?';
+        $text = "Anda yakin ingin menghapus transaksi?";
+        confirmDelete($title, $text);
+
         return view('pages.transactions.index')->with([
             'items' => $items
         ]);
@@ -48,7 +52,7 @@ class TransactionController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Transaction $transaction, $id)
+    public function show($id)
     {
         $item = Transaction::with('details.product')->findOrFail($id);
         return view('pages.transactions.show')->with([
@@ -59,24 +63,51 @@ class TransactionController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Transaction $transaction)
+    public function edit($id)
     {
-        //
+        $item = Transaction::findOrFail($id);
+
+        return view('pages.transactions.edit')->with([
+            'item' => $item
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Transaction $transaction)
+    public function update(Request $request, $id)
     {
-        //
+        $data = $request->all();
+
+        $item = Transaction::findOrFail($id);
+        $item->update($data);
+
+        return redirect()->route('transactions.index');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Transaction $transaction)
+    public function destroy($id)
     {
-        //
+        $item = Transaction::findOrFail($id);
+        $item->delete();
+        
+        alert()->success('Terhapus', 'Transaksi berhasil dihapus');
+
+        return redirect()->route('transactions.index');
+    }
+
+    public function setStatus(Request $request, $id) {
+        $request->validate([
+            'status' =>'required|in:PENDING,SUCCESS,FAILED'
+        ]);
+
+        $item = Transaction::findOrFail($id);
+        $item->transaction_status = $request->status;
+
+        $item->save();
+
+        return redirect()->route('transactions.index');
     }
 }
